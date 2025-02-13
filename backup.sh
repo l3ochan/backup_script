@@ -2,8 +2,8 @@
 
 # Définir la destination Backblaze et les identifiants Restic
 
-export AWS_ACCESS_KEY_ID="<ACCESS_ID>"
-export AWS_SECRET_ACCESS_KEY="<KEY>"
+export AWS_ACCESS_KEY_ID="<KEY ID>"
+export AWS_SECRET_ACCESS_KEY="<ACCESS KEY>"
 export RESTIC_REPO="s3:s3.us-east-005.backblazeb2.com/<BUCKET>"
 export RESTIC_PASSWORD_FILE=/etc/restic-password
 STATUS_FILE="/var/log/backup.log"
@@ -34,7 +34,7 @@ touch "$LOCK_FILE"
 
 # Démarrer la sauvegarde
 echo_status "Début de la sauvegarde Restic."
-echo_state "Début de la sauvegarde Restic."
+echo_state "Sauvegarde en cours..."
 systemctl mask shutdown.target
 shutdown -c  # Annule tout arrêt programmé
 
@@ -83,10 +83,9 @@ systemctl unmask shutdown.target
 # Vérifier si l'arrêt du serveur est prévu et déclencher l'arrêt si nécessaire
 SHUTDOWN_TIME="00:00"
 CURRENT_TIME=$(date +"%H:%M")
-if [[ "$CURRENT_TIME" > "$SHUTDOWN_TIME" ]]; then
+if [[ "$CURRENT_TIME" > "$SHUTDOWN_TIME" && "$SHUTDOWN_TIME" != "00:00" ]]; then
     echo_status "L'heure d'arrêt du serveur est atteinte. Extinction en cours..."
     shutdown -h now
 else
     echo_status "Le serveur reste allumé."
 fi
-
