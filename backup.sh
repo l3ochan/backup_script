@@ -71,8 +71,8 @@ fi
 # Fin de la sauvegarde
 CURRENT_DATE=$(date +'%Y-%m-%d')
 CURRENT_TIME=$(date +'%H:%M:%S')
-echo_status "La backup du $CURRENT_DATE s'est correctement terminée à $CURRENT_TIME."
-echo_state "La backup du $CURRENT_DATE s'est correctement terminée à $CURRENT_TIME."
+echo_status "Backup of $CURRENT_DATE successfully ended at $CURRENT_TIME."
+echo_state "Backup of $CURRENT_DATE successfully ended at $CURRENT_TIME."
 
 # Supprimer le fichier de verrouillage
 rm -f "$LOCK_FILE"
