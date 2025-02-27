@@ -42,6 +42,7 @@ shutdown -c  # Annule tout arrêt programmé
 if ! restic -r "$RESTIC_REPO" snapshots >/dev/null 2>&1; then
     echo_status "Initialisation du dépôt Restic..."
     restic -r "$RESTIC_REPO" init | while read -r line; do echo "$(date +'%Y-%m-%d %H:%M:%S') - $line" | tee -a "$STATUS_FILE"; done
+    restic -r "$RESTIC_REPO" unlock
 fi
 
 # Effectuer une sauvegarde incrémentale avec progression
