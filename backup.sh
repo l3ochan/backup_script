@@ -2,10 +2,10 @@
 
 # Définir la destination Backblaze et les identifiants Restic
 
-export AWS_ACCESS_KEY_ID="<KEY ID>"
-export AWS_SECRET_ACCESS_KEY="<ACCESS KEY>"
-export RESTIC_REPO="s3:s3.us-east-005.backblazeb2.com/<BUCKET>"
-export RESTIC_PASSWORD_FILE=/etc/restic-password
+export AWS_ACCESS_KEY_ID="<key ID>"
+export AWS_SECRET_ACCESS_KEY="<Secret access key>"
+export RESTIC_REPO="s3:<bucket location>"
+export RESTIC_PASSWORD_FILE=<restic passwd>
 STATUS_FILE="/var/log/backup.log"
 LOCK_FILE="/var/run/backup_running.lock"
 BACKUP_STATE_FILE="/var/log/backup_state.log"
@@ -45,12 +45,24 @@ if ! restic -r "$RESTIC_REPO" snapshots >/dev/null 2>&1; then
     restic -r "$RESTIC_REPO" unlock
 fi
 
-# Effectuer une sauvegarde incrémentale avec progression
 for DIR in "/home" "/etc" "/data" "/opt" "/root" "/var/lib" "/var/ossec" "/var/www"; do
     if [ -d "$DIR" ]; then
         echo_status "Sauvegarde en cours: $DIR"
         echo_state "Sauvegarde en cours: $DIR"
-        restic -r "$RESTIC_REPO" backup "$DIR" --verbose 2>&1 | while read -r line; do echo "$(date +'%Y-%m-%d %H:%M:%S') - $line" | tee -a "$STATUS_FILE"; done
+        if [ "$DIR" = "/var/www" ]; then
+            restic -r "$RESTIC_REPO" backup "$DIR" \
+                --exclude="/var/www/Nekocorp-User-data/jellyfin-stack/radarr" \
+                --exclude="/var/www/Nekocorp-User-data/jellyfin-stack/sonarr" \
+                --exclude="/var/www/Nekocorp-User-data/jellyfin-stack/qbittorrent/downloads" \
+                --exclude="/var/www/Nekocorp-User-data/jellyfin-stack/jellyfin/cache" \
+                --verbose 2>&1 | while read -r line; do
+                    echo "$(date +'%Y-%m-%d %H:%M:%S') - $line" | tee -a "$STATUS_FILE"
+                done
+        else
+            restic -r "$RESTIC_REPO" backup "$DIR" --verbose 2>&1 | while read -r line; do
+                echo "$(date +'%Y-%m-%d %H:%M:%S') - $line" | tee -a "$STATUS_FILE"
+            done
+        fi
         if [ $? -eq 0 ]; then
             echo_status "Sauvegarde de $DIR terminée avec succès."
         else
@@ -60,6 +72,7 @@ for DIR in "/home" "/etc" "/data" "/opt" "/root" "/var/lib" "/var/ossec" "/var/w
         echo_status "Le répertoire $DIR n'existe pas, saut de cette sauvegarde."
     fi
 done
+
 
 echo_status "Suppression des anciennes sauvegardes..."
 restic -r "$RESTIC_REPO" forget --keep-within 3d --prune 2>&1 | while read -r line; do echo "$(date +'%Y-%m-%d %H:%M:%S') - $line" | tee -a "$STATUS_FILE"; done
@@ -82,7 +95,7 @@ echo_status "Réactivation de la possibilité d'arrêt du serveur."
 systemctl unmask shutdown.target
 
 # Vérifier si l'arrêt du serveur est prévu et déclencher l'arrêt si nécessaire
-SHUTDOWN_TIME="00:00"
+SHUTDOWN_TIME="01:00"
 CURRENT_TIME=$(date +"%H:%M")
 if [[ "$CURRENT_TIME" > "$SHUTDOWN_TIME" && "$SHUTDOWN_TIME" != "00:00" ]]; then
     echo_status "L'heure d'arrêt du serveur est atteinte. Extinction en cours..."
