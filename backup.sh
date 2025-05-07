@@ -95,9 +95,9 @@ echo_status "Réactivation de la possibilité d'arrêt du serveur."
 systemctl unmask shutdown.target
 
 # Vérifier si l'arrêt du serveur est prévu et déclencher l'arrêt si nécessaire
-SHUTDOWN_TIME="01:00"
+SHUTDOWN_TIME="00:30"
 CURRENT_TIME=$(date +"%H:%M")
-if [[ "$CURRENT_TIME" > "$SHUTDOWN_TIME" && "$SHUTDOWN_TIME" != "00:00" ]]; then
+if [[ "$CURRENT_TIME" > "$SHUTDOWN_TIME" && "$SHUTDOWN_TIME" != "00:30" ]]; then
     echo_status "L'heure d'arrêt du serveur est atteinte. Extinction en cours..."
     shutdown -h now
 else
