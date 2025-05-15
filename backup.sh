@@ -5,10 +5,11 @@
 export AWS_ACCESS_KEY_ID="<key ID>"
 export AWS_SECRET_ACCESS_KEY="<Secret access key>"
 export RESTIC_REPO="s3:<bucket location>"
-export RESTIC_PASSWORD_FILE=<restic passwd>
+export RESTIC_PASSWORD_FILE=</path/to/file>
 STATUS_FILE="/var/log/backup.log"
 LOCK_FILE="/var/run/backup_running.lock"
 BACKUP_STATE_FILE="/var/log/backup_state.log"
+
 
 # Supprimer l'ancien fichier de statut au début de la nouvelle sauvegarde
 echo "Aucune sauvegarde en cours." > "$BACKUP_STATE_FILE"
@@ -51,10 +52,10 @@ for DIR in "/home" "/etc" "/data" "/opt" "/root" "/var/lib" "/var/ossec" "/var/w
         echo_state "Sauvegarde en cours: $DIR"
         if [ "$DIR" = "/var/www" ]; then
             restic -r "$RESTIC_REPO" backup "$DIR" \
-                --exclude="/var/www/Nekocorp-User-data/jellyfin-stack/radarr" \
-                --exclude="/var/www/Nekocorp-User-data/jellyfin-stack/sonarr" \
-                --exclude="/var/www/Nekocorp-User-data/jellyfin-stack/qbittorrent/downloads" \
-                --exclude="/var/www/Nekocorp-User-data/jellyfin-stack/jellyfin/cache" \
+                --exclude="/var/www/Nekocorp-User-data-2/jellyfin-stack/radarr" \
+                --exclude="/var/www/Nekocorp-User-data-2/jellyfin-stack/sonarr" \
+                --exclude="/var/www/Nekocorp-User-data-2/jellyfin-stack/qbittorrent/downloads" \
+                --exclude="/var/www/Nekocorp-User-data-2/jellyfin-stack/jellyfin/cache" \
                 --verbose 2>&1 | while read -r line; do
                     echo "$(date +'%Y-%m-%d %H:%M:%S') - $line" | tee -a "$STATUS_FILE"
                 done
@@ -73,6 +74,8 @@ for DIR in "/home" "/etc" "/data" "/opt" "/root" "/var/lib" "/var/ossec" "/var/w
     fi
 done
 
+echo_status "Retrait des Ancien lock sur le repo restic"
+restic -r "$RESTIC_REPO" unlock>&1 | while read -r line; do echo "$(date +'%Y-%m-%d %H:%M:%S') - $line" | tee -a "$STATUS_FILE"; done
 
 echo_status "Suppression des anciennes sauvegardes..."
 restic -r "$RESTIC_REPO" forget --keep-within 3d --prune 2>&1 | while read -r line; do echo "$(date +'%Y-%m-%d %H:%M:%S') - $line" | tee -a "$STATUS_FILE"; done
